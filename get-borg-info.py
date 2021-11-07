@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
-from runborg.run_borg import RunBorg
-from runborg.read_config import ReadBorgConfig
+from kodiborg.run import RunBorg
+from kodiborg.config import ReadBorgConfig
 
 RB = ReadBorgConfig()
 RB.read_config()
