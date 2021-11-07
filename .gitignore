@@ -1,0 +1,4 @@
+*.xml~
+*.py~
+*.swp
+*/__pycache__/*

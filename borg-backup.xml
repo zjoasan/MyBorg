@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<borg>
+  <program>/usr/bin/borg</program>
+  <repo>brian@eldrad.local:/media/Sonic/borg-repos/{hostname}</repo>
+  <backup-name>{now:%Y-%m-%d %H:%M:%S}</backup-name>
+  <!-- Delete (or comment) the following tag to prevent
+       checking for an estimated file count before running
+       the backup. -->
+  <estimate_files/>
+  <backup>
+    <location>/etc/apt</location>
+    <location>/etc/fstab</location>
+    <location>/etc/auto*</location>
+    <location>/etc/exports</location>
+    <location>/etc/samba</location>
+    <location>/home</location>
+    <exclude>*/.cache/</exclude>
+    <exclude>*/.kodi/temp/</exclude>
+    <exclude>*/Videos/</exclude>
+    <exclude>*/.mozilla/</exclude>
+    <exclude>*/venv/</exclude>
+    <exclude>*lost+found</exclude>
+    <exclude>*/Cache/</exclude>
+    <exclude>*/.cache/</exclude>
+  </backup>
+  <!-- The prune section is optional -->
+  <prune>
+    <weekly>4</weekly>
+    <monthly>12</monthly>
+    <daily>7</daily>
+    <minutely>60</minutely>
+    <yearly>-1</yearly>
+  </prune>
+</borg>
