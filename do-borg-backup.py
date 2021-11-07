@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 
 import os
-from runborg.run_borg import RunBorg
-from runborg.read_config import ReadBorgConfig
+from kodiborg.run import RunBorg
+from kodiborg.config import ReadBorgConfig
 
 def header(flen, fsize, ncsize, psize):
     print()
@@ -20,7 +20,7 @@ borg = RunBorg(repo_location=RB.repo_location,
 
 if RB.estimate_files is not None:
     print("Estimating file count", end="\r", flush=True)
-    for est in borg.run_borg(dry_run=True, show_output=False, status_update_count=1000):
+    for est in borg.run_borg(dry_run=True, show_cmd=False, show_output=False, status_update_count=1000):
         if est['type'] == 'log_message':
             print(est['message'])
             continue
