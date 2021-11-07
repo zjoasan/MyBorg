@@ -18,7 +18,7 @@ class RunBorg(object):
 
     def _build_cmd(self, args):
         """ Used to build the borg command line to spawn """
-        if 'prune' in args:
+        if 'prune' or 'info' in args:
             repo = f"'{self.repo_location}'"
         else:
             repo = f"'{self.repo_location}::{self.backup_name}'"
@@ -34,15 +34,16 @@ class RunBorg(object):
             untouched, but some will have additional info added
             to what borg sent
         """
-
         if dry_run:
             additional_args = ['--dry-run', '--list']
             count = 0
             estimate_status = {'type': 'estimating',
                                'finished': False,
                                'nfile': 0}
-        else:
+        elif self.args[1] != 'info':
             additional_args = ['--stats']
+        else:
+            additional_args = []
         cmd = self._build_cmd(self.args + additional_args)
         if show_cmd:
             print(f"Running: {cmd}")

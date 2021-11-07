@@ -24,6 +24,9 @@ class ReadBorgConfig(object):
                             '--json',
                             '--log-json',
                             '--progress']
+        self._info_args = ['info',
+                           '--json']
+
     def read_config(self):
         self._default_args()
         self.config = ET.parse(self.config_file).getroot()
@@ -34,6 +37,7 @@ class ReadBorgConfig(object):
         self.repo_location = self.config.find('repo').text.format(hostname=hostname)
         self.create_args = [self.program] + self._create_args
         self.prune_args = [self.program] + self._prune_args
+        self.info_args = [self.program] + self._info_args
         
         self.backup_locs = [f"{l.text}" for l in bt.findall('location')]
         self.exclude_locs = [f"--exclude {e.text}" for e in bt.findall('exclude')]
