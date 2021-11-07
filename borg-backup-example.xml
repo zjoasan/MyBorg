@@ -1,4 +1,6 @@
 <?xml version="1.0"?>
+<!-- Example configuration file. Copy to borg-backup.xml and modify for
+     your system -->
 <borg>
   <program>/usr/bin/borg</program>
   <!-- Use {hostname} to add the hostname to your repo path
