@@ -2,7 +2,7 @@ import json
 import subprocess
 import os
 
-class RunBorg(object):
+class Run(object):
     """ RunBorg
         A class to wrap borg command lines
     """
@@ -27,7 +27,7 @@ class RunBorg(object):
                 f"{repo} "
                 f"{' '.join(self.locs)}")
 
-    def run_borg(self, dry_run=False, show_output=False,
+    def run(self, dry_run=False, show_output=False,
                  status_update_count=1000, show_cmd=False):
         """ Spawn a borg process. Output will be sent
             line by line to the calling script. Most lines are

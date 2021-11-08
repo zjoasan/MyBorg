@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 import os
-from kodiborg.run import RunBorg
+from kodiborg.run import Run
 from kodiborg.config import ReadBorgConfig
 
 def header(flen, fsize, ncsize, psize):
@@ -13,14 +13,14 @@ RB = ReadBorgConfig()
 RB.read_config()
 
 # wrapper to run borg create
-borg = RunBorg(repo_location=RB.repo_location,
+borg = Run(repo_location=RB.repo_location,
                args=RB.create_args,
                locs=RB.backup_locs,
                excludes=RB.exclude_locs)
 
 if RB.estimate_files is not None:
     print("Estimating file count", end="\r", flush=True)
-    for est in borg.run_borg(dry_run=True, show_cmd=False, show_output=False, status_update_count=1000):
+    for est in borg.run(dry_run=True, show_cmd=False, show_output=False, status_update_count=1000):
         if est['type'] == 'log_message':
             print(est['message'])
             continue
@@ -40,7 +40,7 @@ ncsize="6"
 header_printed=False
 saved_lines = []
 
-for i in borg.run_borg(show_output=False, show_cmd=False):
+for i in borg.run(show_output=False, show_cmd=False):
     if i['type'] == 'progress_percent':
         if i['msgid'] not in progress_status:
             print()
@@ -127,9 +127,9 @@ if not RB.prune_keep:
     print("Will not prune")
     exit(0)
 
-prune = RunBorg(repo_location=RB.repo_location, args=RB.prune_args + RB.prune_keep)
+prune = Run(repo_location=RB.repo_location, args=RB.prune_args + RB.prune_keep)
 print("\nPruning the repo")
-for pline in prune.run_borg(show_cmd=False, show_output=False):
+for pline in prune.run(show_cmd=False, show_output=False):
     if pline['type'] == 'prune_message':
         print(f"{pline['stat']}: {pline['name']}")
     elif pline['type'] == 'log_message': # Final stats from prune

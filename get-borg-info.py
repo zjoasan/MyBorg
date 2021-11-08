@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from kodiborg.run import RunBorg
+from kodiborg.run import Run
 from kodiborg.config import ReadBorgConfig
 
 RB = ReadBorgConfig()
@@ -8,10 +8,10 @@ RB.read_config()
 
 # Get info on the last nlast backups
 nlast = 5
-info = RunBorg(repo_location=RB.repo_location,
+info = Run(repo_location=RB.repo_location,
                args=RB.info_args + [f"--last {nlast}"])
 
-for i in info.run_borg(show_cmd=True, show_output=True):
+for i in info.run(show_cmd=True, show_output=True):
     #print(i['results']['repository'].keys())
     repo = i['results']['repository']
     print("Repository Information")
