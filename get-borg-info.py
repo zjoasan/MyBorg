@@ -1,10 +1,10 @@
 #!/usr/bin/python3
 
 from kodiborg.run import Run
-from kodiborg.config import ReadBorgConfig
+from kodiborg.config import ReadConfig
 
-RB = ReadBorgConfig()
-RB.read_config()
+RB = ReadConfig()
+RB.readconfig()
 
 # Get info on the last nlast backups
 nlast = 5

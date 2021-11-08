@@ -2,15 +2,15 @@
 
 import os
 from kodiborg.run import Run
-from kodiborg.config import ReadBorgConfig
+from kodiborg.config import ReadConfig
 
 def header(flen, fsize, ncsize, psize):
     print()
     print(f"{'Current':{flen}}   {'Total':{fsize}} | {'File':>{ncsize}} |")
     print(f"{'File':{flen}} | {'Size':{fsize}} | {'Count':>{ncsize}} | {'Progress':^{psize}}")
 
-RB = ReadBorgConfig()
-RB.read_config()
+RB = ReadConfig()
+RB.readconfig()
 
 # wrapper to run borg create
 borg = Run(repo_location=RB.repo_location,

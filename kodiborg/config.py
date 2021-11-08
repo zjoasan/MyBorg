@@ -1,7 +1,7 @@
 import xml.etree.ElementTree as ET
 import platform
 
-class ReadBorgConfig(object):
+class ReadConfig(object):
     def __init__(self, config_file='borg-backup.xml'):
         self.config_file = config_file
         self.config = None
@@ -27,7 +27,7 @@ class ReadBorgConfig(object):
         self._info_args = ['info',
                            '--json']
 
-    def read_config(self):
+    def readconfig(self):
         self._default_args()
         self.config = ET.parse(self.config_file).getroot()
         bt = self.config.find('backup')
