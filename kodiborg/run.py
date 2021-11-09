@@ -1,51 +1,103 @@
 import json
 import subprocess
 import os
+from .config import ReadConfig
 
 class Run(object):
     """ RunBorg
         A class to wrap borg command lines
     """
     def __init__(self, repo_location=None,
+                 showoutput=False,
+                 showcmd=False,
                  backup_name='{now:%Y-%m-%d %H:%M:%S}',
                  args=[], excludes=[], locs=[]):
 
-        self.args = args
-        self.repo_location = repo_location
-        self.backup_name = backup_name
-        self.excludes = excludes
-        self.locs = locs
+        self.config = ReadConfig()
+        self.program = self.config.program
+        self.args = self.config.default_args
+        self.repo_path = self.config.repo_path
+        self.repo_dif = self.config.repo_dir
+        self.repo_name = self.config.repo_name
+        self.repo = self.config.repo
+        self.backup_name = self.config.backup_name
+        self.excludes = self.config.exclude_locs
+        self.locs = self.config.backup_locs
+        self.estimatefiles = self.config.estimate_files
+        self.prune_keep = self.config.prune_keep
+        self.showoutput = showoutput
+        self.showcmd = showcmd
 
-    def _build_cmd(self, args):
+    def _build_cmd(self, borgcmd=None, args=[], additional_args=[]):
         """ Used to build the borg command line to spawn """
-        if 'prune' in args or 'info' in args:
-            repo = f"'{self.repo_location}'"
+        if borgcmd == 'prune' or borgcmd == 'info':
+            repo = self.config.repo_path
         else:
-            repo = f"'{self.repo_location}::{self.backup_name}'"
-        return (f"{' '.join(args)} "
-                f"{' '.join(self.excludes)} "
-                f"{repo} "
-                f"{' '.join(self.locs)}")
+            repo = self.config.repo
+        #print('repo', repo, additional_args)
+        cmd = (f"{self.program} "
+               f"{borgcmd} "
+               f"{' '.join(self.config.default_args[borgcmd])} "
+               f"{' '.join(additional_args)}")
+        if borgcmd == 'create':
+            cmd += f" {' '.join(self.excludes)} "
+        if borgcmd == 'prune':
+            cmd += f" {' '.join(self.prune_keep)} "
+        cmd += f" {repo} "
+        if borgcmd == 'create':
+            cmd += f" {' '.join(self.locs)}"
+        return cmd
 
-    def run(self, dry_run=False, show_output=False,
-                 status_update_count=1000, show_cmd=False):
+    def prune(self):
+        return self.__run(borgcmd="prune")
+
+    def create(self):
+        return self.__run(borgcmd="create", additional_args=['--stats'])
+
+    def info(self, lastfilecount=False, archive_count=5, additional_args=[]):
+        if lastfilecount:
+            archive_count=1
+        if archive_count >= 1:
+            additional_args = [f'--last {archive_count}']
+        gen = self.__run(borgcmd="info", additional_args=additional_args)
+        if lastfilecount:
+            return gen.__next__()['results']['archives'][0]['stats']['nfiles']
+        else:
+            return gen
+
+    def estimate(self, status_update_count=1000):
+        # slow to use --dry-run, fast to use count from last backup
+        #self.estimatefiles = speed
+        #info = self.__run(additional_args=['--dry-run', '--list'],
+        #                  status_update_count=status_update_count)
+        #inf = self.__run(borgcmd='info', speed=speed)
+                          
+        if self.estimatefiles == 'fast':
+            return self.info(lastfilecount=True)
+        elif self.estimatefiles == 'slow':
+            return self.__run(borgcmd="create",
+                              additional_args=['--dry-run', '--list'],
+                              status_update_count=status_update_count)
+        else:
+            print(f"Invalid value {self.estimatefiles} for estimate-files in config")
+            print("Accepted values are: fast, slow, none")
+            return None
+
+    def __run(self, borgcmd=None, additional_args=[], status_update_count=0):
         """ Spawn a borg process. Output will be sent
             line by line to the calling script. Most lines are
             untouched, but some will have additional info added
             to what borg sent
         """
-        if dry_run:
-            additional_args = ['--dry-run', '--list']
+        #print('building cmd', additional_args)
+        if self.estimatefiles == 'slow':
             count = 0
             estimate_status = {'type': 'estimating',
                                'finished': False,
                                'nfile': 0}
-        elif self.args[1] != 'info':
-            additional_args = ['--stats']
-        else:
-            additional_args = []
-        cmd = self._build_cmd(self.args + additional_args)
-        if show_cmd:
+
+        cmd = self._build_cmd(borgcmd=borgcmd, args=self.args, additional_args=additional_args)
+        if self.showcmd:
             print(f"Running: {cmd}")
         proc = subprocess.Popen(cmd,
                                 shell=True,
@@ -53,7 +105,7 @@ class Run(object):
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE)
         for j in self._get_json(proc):
-            if show_output:
+            if self.showoutput:
                 print(j)
             if j['type'] == 'file_status':
                 if j['status'] == '-' and os.path.isfile(j['path']): # A file
@@ -89,12 +141,13 @@ class Run(object):
         except json.decoder.JSONDecodeError:
             json_results = None
 
-        if dry_run:
+        if self.estimatefiles == 'slow':
             estimate_status['nfiles'] = count
             estimate_status['finished'] = True
             yield estimate_status
         else:
             yield {'type': 'backup_done', 'results': json_results}
+        self.estimatefiles = 'none' # Turn off dryrun
 
     def _get_json(self, proc):
         """ Read the json returned from borg, line by line until
@@ -130,3 +183,30 @@ class Run(object):
             size /= power
             n += 1
         return f"{size:0.3f}{labels[n]}B"
+
+    @property
+    def estimatefiles(self):
+        return self.__estimatefiles
+
+    @estimatefiles.setter
+    def estimatefiles(self, val):
+        self.__estimatefiles = val.lower()
+        if self.__estimatefiles not in ['slow', 'fast', 'none']:
+            self.__estimatefiles = 'none'
+
+    @property
+    def showcmd(self):
+        return self.__showcmd
+
+    @showcmd.setter
+    def showcmd(self, val):
+        self.__showcmd = val
+
+    @property
+    def showoutput(self):
+        return self.__showoutput
+
+    @showoutput.setter
+    def showoutput(self, val):
+        self.__showoutput = val
+

@@ -1,18 +1,14 @@
 #!/usr/bin/python3
 
+# An example of how to get stats from a borg repo.
+
 from kodiborg.run import Run
-from kodiborg.config import ReadConfig
 
-RB = ReadConfig()
-RB.readconfig()
-
+info = Run()
 # Get info on the last nlast backups
-nlast = 5
-info = Run(repo_location=RB.repo_location,
-               args=RB.info_args + [f"--last {nlast}"])
+nlast = 4
 
-for i in info.run(show_cmd=True, show_output=True):
-    #print(i['results']['repository'].keys())
+for i in info.info(archive_count=nlast):
     repo = i['results']['repository']
     print("Repository Information")
     print(f"    Location: {repo['location']}")
@@ -21,7 +17,6 @@ for i in info.run(show_cmd=True, show_output=True):
     print()
     print(f"Stats for the last {nlast} backups")
     for a in i['results']['archives']:
-        #print(a)
         stats = a['stats']
         print(f"Name: {a['name']} "
               f"Duration: {a['duration']} "

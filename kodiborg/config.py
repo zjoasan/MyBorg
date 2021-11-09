@@ -1,5 +1,9 @@
 import xml.etree.ElementTree as ET
 import platform
+import os
+
+# Read the config info from the XML, and help make the command line
+# options for borg
 
 class ReadConfig(object):
     def __init__(self, config_file='borg-backup.xml'):
@@ -11,36 +15,55 @@ class ReadConfig(object):
         self.borg_args = None
         self.repo_location = None
         self.estimate_files = False
+        self._default_args()
+        self.__readconfig()
 
 
     def _default_args(self):
         """ Default args for prune and create """
-        self._prune_args = ['prune',
-                           '--stats',
-                           '--list',
-                           '--log-json']
-        self._create_args = ['create',
-                            '--one-file-system',
-                            '--json',
-                            '--log-json',
-                            '--progress']
-        self._info_args = ['info',
-                           '--json']
+        self.default_args = {'info': ['--json'],
+                               'create': ['--one-file-system',
+                                          '--json',
+                                          '--log-json',
+                                          '--progress'],
+                               'prune': ['--stats',
+                                         '--list',
+                                         '--log-json']}
 
-    def readconfig(self):
-        self._default_args()
+    def __readconfig(self):
         self.config = ET.parse(self.config_file).getroot()
         bt = self.config.find('backup')
-        self.program = self.config.find('program').text
-        prune = self.config.find('prune')
-        hostname = platform.node().title()
-        self.repo_location = self.config.find('repo').text.format(hostname=hostname)
-        self.create_args = [self.program] + self._create_args
-        self.prune_args = [self.program] + self._prune_args
-        self.info_args = [self.program] + self._info_args
-        
+        try:
+            self.program = self.config.find('program').text
+        except AttributeError:
+            self.program = "borg"
+        try:
+            prune = self.config.find('prune')
+        except AttributeError:
+            prune = None
+        self.repo_dir = self.config.find('repo-path').text
+        try:
+            self.repo_name = self.config.find('repo-name').text
+        except AttributeError:
+            self.repo_name = platform.node().title()
+        self.repo_path = os.path.join(self.repo_dir, self.repo_name)
+        try:
+            self.backup_name = self.config.find('backup-name').text
+        except AttributeError:
+            self.backup_name = "{now:%Y-%m-%d %H:%M:%S}"
+        self.repo = "::".join([self.repo_path, f"'{self.backup_name}'"])
         self.backup_locs = [f"{l.text}" for l in bt.findall('location')]
-        self.exclude_locs = [f"--exclude {e.text}" for e in bt.findall('exclude')]
-        self.prune_keep = [f"--keep-{l.tag} {l.text}" for l in prune]
+        try:
+            self.exclude_locs = [f"--exclude '{e.text}'" for e in bt.findall('exclude')]
+        except AttributeError:
+            self.exclude_locs = None
 
-        self.estimate_files = self.config.find('estimate_files')
+        if prune is not None:
+            self.prune_keep = [f"--keep-{l.tag} {l.text}" for l in prune]
+        else:
+            self.prune_keep = None
+
+        try:
+            self.estimate_files = self.config.find('estimate-files').text.lower()
+        except AttributeError:
+            self.estimate_files = 'none'

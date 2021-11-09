@@ -1,38 +1,49 @@
 #!/usr/bin/python3
 
+# An example of how the module could be used.
+
 import os
 from kodiborg.run import Run
-from kodiborg.config import ReadConfig
+
+# This is just so it looks nice running from the command line.
+# If called from Kodi then something like this probably would not be needed.
 
 def header(flen, fsize, ncsize, psize):
     print()
     print(f"{'Current':{flen}}   {'Total':{fsize}} | {'File':>{ncsize}} |")
     print(f"{'File':{flen}} | {'Size':{fsize}} | {'Count':>{ncsize}} | {'Progress':^{psize}}")
 
-RB = ReadConfig()
-RB.readconfig()
+# Initialize the module. Also reads the xml config
+borg = Run()
 
-# wrapper to run borg create
-borg = Run(repo_location=RB.repo_location,
-               args=RB.create_args,
-               locs=RB.backup_locs,
-               excludes=RB.exclude_locs)
+# This example will override the xml config for estimate type.
+# Forces it to fast
 
-if RB.estimate_files is not None:
-    print("Estimating file count", end="\r", flush=True)
-    for est in borg.run(dry_run=True, show_cmd=False, show_output=False, status_update_count=1000):
-        if est['type'] == 'log_message':
-            print(est['message'])
-            continue
-        if est['finished']:
-            print(f"Estimated files to check: {est['nfiles']}")
-        else:
-            print(f"Estimating file count: {est['nfiles']}", end="\r", flush=True)
-    estimated = est['nfiles']
+borg.estimatefiles = 'fast'
+if borg.estimatefiles != 'none':
+    print(f'Estimating file count: {borg.estimatefiles}')
+    e = borg.estimate()
+    if type(e) is int:
+        estimated = e
+    else:
+        for est in e:
+            if est['type'] == 'log_message':
+                print(est['message'])
+                continue
+            if est['finished']:
+                estimated = est['nfiles']
+            else:
+                print(f"Estimating file count: {est['nfiles']}", end="\r", flush=True)
+    print(f"\nEstimated files to check: {estimated}")
 else:
+    print("Not estimating file count")
     estimated = 0
 
 progress_status = {}
+
+# Stuff to make the formatting pretty for command line. Could also
+# be used from Kodi.
+
 flen="<40.40"
 fsize=">9.9"
 psize="8.8"
@@ -40,7 +51,11 @@ ncsize="6"
 header_printed=False
 saved_lines = []
 
-for i in borg.run(show_output=False, show_cmd=False):
+# Start the actual backup.
+# You could do borg.showcmd = True to see the generated borg command line
+# if you want. Can be helpful for debugging.
+
+for i in borg.create():
     if i['type'] == 'progress_percent':
         if i['msgid'] not in progress_status:
             print()
@@ -109,12 +124,11 @@ for i in borg.run(show_output=False, show_cmd=False):
         if i['nfiles'] > estimated:
             estimated = i['nfiles']
         if i['path'] == '':
-            # No path
             continue
         line = (f"{os.path.split(i['path'])[1]:{flen}} | "
               f"{borg.format_bytes(i['original_size']):{fsize}} | "
               f"{i['nfiles']:{ncsize}d} | ")
-        if RB.estimate_files is not None:
+        if borg.estimatefiles != 'none':
             line += f"{i['nfiles'] / estimated:0.1%}"
         else:
             line += "UNKNOWN"
@@ -123,15 +137,15 @@ for i in borg.run(show_output=False, show_cmd=False):
         else:
             print(line, end="\r", flush=True)
 
-if not RB.prune_keep:
-    print("Will not prune")
-    exit(0)
+# You don't need to prune, or it could be a separate script.
 
-prune = Run(repo_location=RB.repo_location, args=RB.prune_args + RB.prune_keep)
-print("\nPruning the repo")
-for pline in prune.run(show_cmd=False, show_output=False):
-    if pline['type'] == 'prune_message':
-        print(f"{pline['stat']}: {pline['name']}")
-    elif pline['type'] == 'log_message': # Final stats from prune
-        print(pline['message'])
+if borg.prune_keep is None:
+    print("\nWill not prune")
+else:
+    print("\nPruning the repo")
+    for pline in borg.prune():
+        if pline['type'] == 'prune_message':
+            print(f"{pline['stat']}: {pline['name']}")
+        elif pline['type'] == 'log_message': # Final stats from prune
+            print(pline['message'])
 
