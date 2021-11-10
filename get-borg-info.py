@@ -9,6 +9,10 @@ info = MyBorg()
 nlast = 4
 
 for i in info.info(archive_count=nlast):
+    if i['type'] == 'return_code':
+        print(f"borg info returned {i['code']}")
+        break
+
     repo = i['results']['repository']
     print(i['results']['repository'].keys())
     print("Repository Information")
