@@ -14,7 +14,6 @@ for i in info.info(archive_count=nlast):
         break
 
     repo = i['results']['repository']
-    print(i['results']['repository'].keys())
     print("Repository Information")
     print(f"    Location: {repo['location']}")
     print(f"    ID: {repo['id']}")
