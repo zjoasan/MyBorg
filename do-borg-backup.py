@@ -147,16 +147,3 @@ for i in borg.create():
             saved_lines.append(line)
         else:
             print(line, end="\r", flush=True)
-
-# You don't need to prune, or it could be a separate script.
-
-if borg.prune_keep is None:
-    print("\nWill not prune")
-else:
-    print("\nPruning the repo")
-    for pline in borg.prune():
-        if pline['type'] == 'prune_message':
-            print(f"{pline['stat']}: {pline['name']}")
-        elif pline['type'] == 'log_message': # Final stats from prune
-            print(pline['message'])
-

@@ -10,6 +10,7 @@ class ReadConfig(object):
         self.config_file = config_file
         self.config = None
         self.prune_keep = None
+        self.prune_details = None
         self.backup_locs = None
         self.exclude_locs = None
         self.borg_args = None
@@ -87,6 +88,7 @@ class ReadConfig(object):
 
         if prune is not None:
             self.prune_keep = [f"--keep-{l.tag} {l.text}" for l in prune]
+            self.prune_details = {l.tag:l.text for l in prune}
         else:
             self.prune_keep = None
 
