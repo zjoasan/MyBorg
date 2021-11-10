@@ -12,7 +12,9 @@ for i in info.info(archive_count=nlast):
     if i['type'] == 'return_code':
         print(f"borg info returned {i['code']}")
         break
-
+    if i['results'] is None:
+        print("Nothing returned from borg info. Probably an empty repo")
+        break
     repo = i['results']['repository']
     print("Repository Information")
     print(f"    Location: {repo['location']}")

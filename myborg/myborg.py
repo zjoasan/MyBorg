@@ -45,6 +45,8 @@ class MyBorg(object):
             cmd += f" {' '.join(self.excludes)} "
         if borgcmd == 'prune':
             cmd += f" {' '.join(self.prune_keep)} "
+        if borgcmd == 'init':
+            cmd += f" --encryption {self.config.encryption}"
         cmd += f" {repo} "
         if borgcmd == 'create':
             cmd += f" {' '.join(self.locs)}"
@@ -111,9 +113,14 @@ class MyBorg(object):
         cmd = self._build_cmd(borgcmd=borgcmd, args=self.args, additional_args=additional_args)
         if self.showcmd:
             print(f"Running: {cmd}")
+        if self.config.encryption is not None:
+            env = {'BORG_PASSPHRASE': self.config.encryption_passphrase}
+        else:
+            env = {}
         proc = subprocess.Popen(cmd,
                                 shell=True,
                                 encoding='utf-8',
+                                env=env,
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE)
         for j in self._get_json(proc):
@@ -164,7 +171,10 @@ class MyBorg(object):
             estimate_status['finished'] = True
             yield estimate_status
         else:
-            yield {'type': 'backup_done', 'results': json_results}
+            rc = {'type': 'backup_done', 'results': json_results}
+            if self.showoutput:
+                print(rc)
+            yield rc
         self.estimatefiles = 'none' # Turn off dryrun
 
     def _get_json(self, proc):
@@ -186,8 +196,11 @@ class MyBorg(object):
             else:
                 line += out
         if proc.returncode != 0:
-            yield {'code': proc.returncode,
+            rc = {'code': proc.returncode,
                    'type': 'return_code'}
+            if self.showoutput:
+                print(rc)
+            yield rc
 
     def format_bytes(self, size):
         """ Instead of requiring humanize to be installed

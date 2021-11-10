@@ -9,10 +9,15 @@
   <!-- Path to the borg repo. -->
   <repo-path>brian@eldrad.local:/media/Sonic/borg-repos</repo-path>
   <!-- if repo-name is not set, {hostname} will be used -->
-  <repo-name>{hostname}</repo-name>
+  <!-- <repo-name>{hostname}</repo-name> -->
   <!-- Name of the backup. You can use the built in borg syntax.
        If not specified, {now:%Y-%m-%d %H:%M:%S} will be used. -->
   <!-- <backup-name>{now:%Y-%m-%d %H:%M:%S}</backup-name> -->
+  <!-- Encryption to use. Current valid values are: none, keyfile,
+       repokey, authenticated, keyfile-blake2, repokey-blake2,
+       authenticated-blake2 -->
+  <encryption>keyfile-blake2</encryption>
+  <encryption-passphrase>thisisapassphrase</encryption-passphrase>
   <!-- Borg has no built-in way to estimate files for a backup.
        You can supply 3 ways here to attempt to get an estimate:
        slow == does a dry-run of a backup. Is slow

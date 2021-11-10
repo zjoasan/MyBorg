@@ -15,6 +15,8 @@ class ReadConfig(object):
         self.borg_args = None
         self.repo_location = None
         self.estimate_files = False
+        self.encryption = False
+        self.encryption_passphrase = None
         self._default_args()
         self.__readconfig()
 
@@ -22,8 +24,7 @@ class ReadConfig(object):
     def _default_args(self):
         """ Default args for prune and create """
         self.default_args = {'info': ['--json'],
-                             'init': ['--encryption none',
-                                      '--log-json'],
+                             'init': ['--log-json'],
                              'create': ['--one-file-system',
                                         '--json',
                                         '--log-json',
@@ -58,6 +59,14 @@ class ReadConfig(object):
         except AttributeError:
             self.backup_name = "{now:%Y-%m-%d %H:%M:%S}"
         self.repo = "::".join([self.repo_path, f"'{self.backup_name}'"])
+        try:
+            self.encryption = self.config.find('encryption').text
+        except AttributeError:
+            self.encryption = 'none'
+        try:
+            self.encryption_passphrase = self.config.find('encryption-passphrase').text
+        except AttributeError:
+            self.encryption_passphrase = None
         self.backup_locs = [f"{l.text}" for l in bt.findall('location')]
         try:
             self.exclude_locs = [f"--exclude '{e.text}'" for e in bt.findall('exclude')]
