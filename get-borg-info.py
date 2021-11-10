@@ -2,14 +2,15 @@
 
 # An example of how to get stats from a borg repo.
 
-from kodiborg.run import Run
+from myborg.myborg import MyBorg
 
-info = Run()
+info = MyBorg()
 # Get info on the last nlast backups
 nlast = 4
 
 for i in info.info(archive_count=nlast):
     repo = i['results']['repository']
+    print(i['results']['repository'].keys())
     print("Repository Information")
     print(f"    Location: {repo['location']}")
     print(f"    ID: {repo['id']}")

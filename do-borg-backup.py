@@ -3,7 +3,7 @@
 # An example of how the module could be used.
 
 import os
-from kodiborg.run import Run
+from myborg.myborg import MyBorg
 
 # This is just so it looks nice running from the command line.
 # If called from Kodi then something like this probably would not be needed.
@@ -14,17 +14,19 @@ def header(flen, fsize, ncsize, psize):
     print(f"{'File':{flen}} | {'Size':{fsize}} | {'Count':>{ncsize}} | {'Progress':^{psize}}")
 
 # Initialize the module. Also reads the xml config
-borg = Run()
+borg = MyBorg()
 
 # This example will override the xml config for estimate type.
 # Forces it to fast
 
-borg.estimatefiles = 'fast'
 if borg.estimatefiles != 'none':
     print(f'Estimating file count: {borg.estimatefiles}')
     e = borg.estimate()
     if type(e) is int:
         estimated = e
+    elif e is None:
+        print("No previous backup to get estimate from")
+        estimated = 0
     else:
         for est in e:
             if est['type'] == 'log_message':
@@ -65,7 +67,10 @@ for i in borg.create():
         else:
             print(f"{i['message']}")
     elif i['type'] == 'log_message':
-        print(f"Unexpected log message: {i['message']}")
+        print(f"{i['message']}")
+        if i['msgid'] == "Repository.DoesNotExist":
+            print("Please run do-borg-init.py to create the borg repository!")
+            break
     elif i['type'] == 'progress_message':
         if i['msgid'] not in progress_status:
             progress_status[i['msgid']] = i['finished']
@@ -121,14 +126,20 @@ for i in borg.create():
               f"{c_stats['total_unique_chunks']:>13d} "
               f"{c_stats['total_chunks']:>15d}")
     else:
-        if i['nfiles'] > estimated:
+        if i['type'] == 'return_code':
+            if i['code'] != 0:
+                print(f"The backup was aborted ({i['code']})")
+                exit(i['code'])
+            else:
+                continue
+        if estimated > 0 and i['nfiles'] > estimated:
             estimated = i['nfiles']
         if i['path'] == '':
             continue
         line = (f"{os.path.split(i['path'])[1]:{flen}} | "
               f"{borg.format_bytes(i['original_size']):{fsize}} | "
               f"{i['nfiles']:{ncsize}d} | ")
-        if borg.estimatefiles != 'none':
+        if borg.estimatefiles != 'none' and estimated > 0:
             line += f"{i['nfiles'] / estimated:0.1%}"
         else:
             line += "UNKNOWN"

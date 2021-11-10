@@ -22,6 +22,16 @@
        If not defined defaults to none.
   -->
   <estimate-files>fast</estimate-files>
+  <!-- Options to create a repository -->
+  <init>
+    <!-- storage-quota is optional. If not specified the repo can grow
+         to any size. This is not the size of the data backed up, but
+         the actual deduplicated size. Read the borg documents on what
+         values are allowed. -->
+    <storage-quota>8G</storage-quota>
+    <!-- If this tag is set to true then parent dirs are created. -->
+    <make-parent-dirs>true</make-parent-dirs>
+  </init>
   <backup>
     <!-- borg wildcards are used for the following tags -->
     <!-- Spaces are allowed and will be properly quoted when sent to borg -->
@@ -36,16 +46,13 @@
     <exclude>*/.cache/</exclude>
     <exclude>*/.kodi/temp/</exclude>
     <exclude>*/Videos/</exclude>
-    <exclude>*/.mozilla/</exclude>
-    <exclude>*/venv/</exclude>
     <exclude>*lost+found</exclude>
     <exclude>*/Cache/</exclude>
-    <exclude>*/.cache/</exclude>
   </backup>
   <!-- Read the borg docs about how prune works!!!
        This section is not required, but if included at least one
-       interval must be included. All of the --keep options are allowed.
-       As shown in the example, leave off the --keep- part, it will be added
+       interval must be specified. All of the keep options are allowed.
+       As shown in the example, leave off the keep- part, it will be added
        automatically. -->
   <prune>
     <weekly>4</weekly>

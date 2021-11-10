@@ -3,8 +3,8 @@ import subprocess
 import os
 from .config import ReadConfig
 
-class Run(object):
-    """ RunBorg
+class MyBorg(object):
+    """ MyBorg
         A class to wrap borg command lines
     """
     def __init__(self, repo_location=None,
@@ -25,12 +25,14 @@ class Run(object):
         self.locs = self.config.backup_locs
         self.estimatefiles = self.config.estimate_files
         self.prune_keep = self.config.prune_keep
+        self.storage_quota = self.config.storage_quota
+        self.make_parent_dirs = self.config.make_parent_dirs
         self.showoutput = showoutput
         self.showcmd = showcmd
 
     def _build_cmd(self, borgcmd=None, args=[], additional_args=[]):
         """ Used to build the borg command line to spawn """
-        if borgcmd == 'prune' or borgcmd == 'info':
+        if borgcmd == 'prune' or borgcmd == 'info' or borgcmd == 'init':
             repo = self.config.repo_path
         else:
             repo = self.config.repo
@@ -48,6 +50,14 @@ class Run(object):
             cmd += f" {' '.join(self.locs)}"
         return cmd
 
+    def init(self):
+        additional_args = []
+        if self.storage_quota is not None:
+            additional_args += [f"--storage-quota {self.storage_quota}"]
+        if self.make_parent_dirs:
+            additional_args += ["--make-parent-dirs"]
+        return self.__run(borgcmd="init", additional_args=additional_args)
+
     def prune(self):
         return self.__run(borgcmd="prune")
 
@@ -59,25 +69,27 @@ class Run(object):
             archive_count=1
         if archive_count >= 1:
             additional_args = [f'--last {archive_count}']
+
         gen = self.__run(borgcmd="info", additional_args=additional_args)
         if lastfilecount:
-            return gen.__next__()['results']['archives'][0]['stats']['nfiles']
+            rc = None
+            for g in gen:
+                if 'results' in g.keys():
+                    if g['results'] is None:
+                        return None
+                    return g['results']['archives'][0]['stats']['nfiles']
         else:
             return gen
 
     def estimate(self, status_update_count=1000):
-        # slow to use --dry-run, fast to use count from last backup
-        #self.estimatefiles = speed
-        #info = self.__run(additional_args=['--dry-run', '--list'],
-        #                  status_update_count=status_update_count)
-        #inf = self.__run(borgcmd='info', speed=speed)
-                          
         if self.estimatefiles == 'fast':
             return self.info(lastfilecount=True)
         elif self.estimatefiles == 'slow':
             return self.__run(borgcmd="create",
                               additional_args=['--dry-run', '--list'],
                               status_update_count=status_update_count)
+        elif self.estimatefiles == 'none':
+            return None
         else:
             print(f"Invalid value {self.estimatefiles} for estimate-files in config")
             print("Accepted values are: fast, slow, none")
@@ -107,6 +119,12 @@ class Run(object):
         for j in self._get_json(proc):
             if self.showoutput:
                 print(j)
+            if type(j) is not dict:
+                # Non json, just print it and continue
+                print(j)
+                continue
+            if 'rc' in j.keys():
+                print('got rc', j)
             if j['type'] == 'file_status':
                 if j['status'] == '-' and os.path.isfile(j['path']): # A file
                     count += 1
@@ -135,7 +153,7 @@ class Run(object):
                 else:
                     yield j
             else:
-                print('other', j)
+                yield j
         try:
             json_results = json.loads(proc.stdout.read())
         except json.decoder.JSONDecodeError:
@@ -167,7 +185,10 @@ class Run(object):
                 line = ""
             else:
                 line += out
-                
+        if proc.returncode != 0:
+            yield {'code': proc.returncode,
+                   'type': 'return_code'}
+
     def format_bytes(self, size):
         """ Instead of requiring humanize to be installed
             use this simple bytes converter.

@@ -22,13 +22,15 @@ class ReadConfig(object):
     def _default_args(self):
         """ Default args for prune and create """
         self.default_args = {'info': ['--json'],
-                               'create': ['--one-file-system',
-                                          '--json',
-                                          '--log-json',
-                                          '--progress'],
-                               'prune': ['--stats',
-                                         '--list',
-                                         '--log-json']}
+                             'init': ['--encryption none',
+                                      '--log-json'],
+                             'create': ['--one-file-system',
+                                        '--json',
+                                        '--log-json',
+                                        '--progress'],
+                             'prune': ['--stats',
+                                       '--list',
+                                       '--log-json']}
 
     def __readconfig(self):
         self.config = ET.parse(self.config_file).getroot()
@@ -37,6 +39,10 @@ class ReadConfig(object):
             self.program = self.config.find('program').text
         except AttributeError:
             self.program = "borg"
+        try:
+            init = self.config.find('init')
+        except AttributeError:
+            init = None
         try:
             prune = self.config.find('prune')
         except AttributeError:
@@ -57,6 +63,18 @@ class ReadConfig(object):
             self.exclude_locs = [f"--exclude '{e.text}'" for e in bt.findall('exclude')]
         except AttributeError:
             self.exclude_locs = None
+
+        if init is not None:
+            try:
+                self.storage_quota = init.find('storage-quota').text
+            except AttributeError:
+                self.storage_quota = None
+            try:
+                self.make_parent_dirs = init.find('make-parent-dirs').text
+                if self.make_parent_dirs.lower() == 'true':
+                    self.make_parent_dirs = True
+            except AttributeError:
+                self.make_parent_dirs = False
 
         if prune is not None:
             self.prune_keep = [f"--keep-{l.tag} {l.text}" for l in prune]
