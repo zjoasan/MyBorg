@@ -1,4 +1,4 @@
-?xml version="1.0" ?>
+<?xml version="1.0" ?>
 <settings version="1">
     <section id="my.addon.id">
         <category label="borg">
@@ -79,8 +79,7 @@
 
 			<setting id="estimate_files" type="string" label="32007" help="">
 				<level>0</level>
-				<default/>
-				<default>fast/default>
+				<default>fast</default>
 					<constraints>
 					<options>
 						<option>fast</option>
@@ -116,7 +115,7 @@
 		<category label="Backup">
 			<setting id="location" type="string" label="32010" help="Make sure ' / ' in between every path">
 				<level>0</level>
-				<default>/etc/apt / /etc/fstab / /etc/auto* / /etc/exports / /etc/samba / /home<</default>
+				<default>/etc/apt / /etc/fstab / /etc/auto* / /etc/exports / /etc/samba / /home</default>
 				<constraints>
 					<allowempty>false</allowempty>
 				</constraints>
@@ -192,8 +191,6 @@
 					<heading>32016</heading>
 				</control>
 			</setting>
-				</section>
-			</settings>
 		</category>
 	</section>
 </settings>
