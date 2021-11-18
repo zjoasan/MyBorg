@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="plugin.script.MyBorg" name="MyBorg-backup" version="0.1" provider-name="bmillham and zjoasan">
+<addon id="plugin.script.MyBorg" name="MyBorg-backup" version="0.2" provider-name="bmillham and zjoasan">
 	<requires>
 		<import addon="xbmc.python" version="3.0.0"/>
 	</requires>
-	<extension point="xbmc.python.script" library="resources/lib/do-borg-backup.py">
+	<extension point="xbmc.python.script" library="resources/lib/default.py">
 		<provides>executable</provides>
 	</extension>
 	<extension point="xbmc.addon.metadata">
-		<summary lang="en_gb">Admin you Borg backup</summary>
-		<description lang="en_gb">A addon to administrate and trigger Borg</description>
-		<disclaimer lang="en_gb">Use att your own risk</disclaimer>
+		<summary lang="en_gb">Admin your Borg backup</summary>
+		<description lang="en_gb">An addon to administer and trigger Borg</description>
+		<disclaimer lang="en_gb">Use at your own risk</disclaimer>
 		<language>en</language> <!-- the language of the videos or other content the plugin provides, may be omitted in case the addon does not provide any content -->
 		<platform>linux</platform>
 		<license>GPL3</license>

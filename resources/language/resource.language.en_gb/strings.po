@@ -13,7 +13,7 @@ msgstr ""
 ""Language: en_gb
 ""Plural-Forms: nplurals=2; plural=(n != 1);
 "
-#. Strings for not_plugin.script.MyBorg
+#. Strings for plugin.script.MyBorg
 
 msgctxt "#32000" 
 msgid "Borg backup settings" 
@@ -52,13 +52,12 @@ msgid "Make parent dirs"
 msgstr ""
 
 msgctxt "#32009"
-msgid "Location"
+msgid "Include"
 msgstr ""
 
 msgctxt "#32010"
-msgid "Location"
+msgid "Exclude"
 msgstr ""
-
 
 msgctxt "#32011"
 msgid "Prune Weekly"
@@ -79,3 +78,25 @@ msgstr ""
 msgctxt "#32015"
 msgid "Prune Yearly"
 msgstr ""
+
+msgctxt "#32016"
+msgid "Borg"
+msgstr ""
+
+msgctxt "#32017"
+msgid "Path to Borg Repo"
+msgstr ""
+
+msgctxt "#32018"
+msgid "Init"
+msgstr ""
+
+msgctxt "#32019"
+msgid "Backup"
+msgstr ""
+
+msgctxt "#32020"
+msgid "Prune"
+msgstr ""
+
+
